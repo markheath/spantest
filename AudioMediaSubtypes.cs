@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace NAudio.Dmo
 {
@@ -23,49 +24,23 @@ namespace NAudio.Dmo
         public static readonly Guid MEDIASUBTYPE_AU = new Guid("e436eb8c-524f-11ce-9f53-0020af0ba770");
         public static readonly Guid MEDIASUBTYPE_AIFF = new Guid("e436eb8d-524f-11ce-9f53-0020af0ba770");
 
-        public static readonly Guid[] AudioSubTypes = new Guid[]
+        public static readonly (Guid,string)[] AudioSubTypes = new (Guid,string)[]
         {
-            MEDIASUBTYPE_PCM,
-            MEDIASUBTYPE_PCMAudioObsolete,
-            MEDIASUBTYPE_MPEG1Packet,
-            MEDIASUBTYPE_MPEG1Payload,
-            MEDIASUBTYPE_MPEG2_AUDIO,
-            MEDIASUBTYPE_DVD_LPCM_AUDIO,
-            MEDIASUBTYPE_DRM_Audio,
-            MEDIASUBTYPE_IEEE_FLOAT,
-            MEDIASUBTYPE_DOLBY_AC3,
-            MEDIASUBTYPE_DOLBY_AC3_SPDIF,
-            MEDIASUBTYPE_RAW_SPORT,
-            MEDIASUBTYPE_SPDIF_TAG_241h,
-            WMMEDIASUBTYPE_MP3,
+            (MEDIASUBTYPE_PCM,"PCM"),
+            (MEDIASUBTYPE_PCMAudioObsolete,"PCM Obsolete"),
+            (MEDIASUBTYPE_MPEG1Packet,"MPEG1Packet"),
+            (MEDIASUBTYPE_MPEG1Payload,"MPEG1Payload"),
+            (MEDIASUBTYPE_MPEG2_AUDIO,"MPEG2_AUDIO"),
+            (MEDIASUBTYPE_DVD_LPCM_AUDIO,"DVD_LPCM_AUDIO"),
+            (MEDIASUBTYPE_DRM_Audio,"DRM_Audio"),
+            (MEDIASUBTYPE_IEEE_FLOAT,"IEEE_FLOAT"),
+            (MEDIASUBTYPE_DOLBY_AC3,"DOLBY_AC3"),
+            (MEDIASUBTYPE_DOLBY_AC3_SPDIF,"DOLBY_AC3_SPDIF"),
+            (MEDIASUBTYPE_RAW_SPORT,"RAW_SPORT"),
+            (MEDIASUBTYPE_SPDIF_TAG_241h,"SPDIF_TAG_241h"),
+            (WMMEDIASUBTYPE_MP3,"MP3")
         };
-
-        public static readonly string[] AudioSubTypeNames = new string[]
-        {
-            "PCM",
-            "PCM Obsolete",
-            "MPEG1Packet",
-            "MPEG1Payload",
-            "MPEG2_AUDIO",
-            "DVD_LPCM_AUDIO",
-            "DRM_Audio",
-            "IEEE_FLOAT",
-            "DOLBY_AC3",
-            "DOLBY_AC3_SPDIF",
-            "RAW_SPORT",
-            "SPDIF_TAG_241h",
-            "MP3"
-        };
-        public static string GetAudioSubtypeName(Guid subType)
-        {
-            for (int index = 0; index < AudioSubTypes.Length; index++)
-            {
-                if (subType == AudioSubTypes[index])
-                {
-                    return AudioSubTypeNames[index];
-                }
-            }
-            return subType.ToString();
-        }
+        public static string GetAudioSubtypeName(Guid subType) => 
+            AudioSubTypes.Where(s => s.Item1 == subType).Select(x => x.Item2).FirstOrDefault();
     }
 }
