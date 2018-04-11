@@ -12,10 +12,14 @@ namespace SpanTest
                 var sg = new SignalGenerator() { Gain = 0.2f};
                 await wo.InitAsync(sg.Take(TimeSpan.FromSeconds(5)));
                 wo.Play();
+                wo.PlaybackStopped += (s,e)=> Console.WriteLine($"Stopped {e.Exception}");
+                Console.WriteLine("playing...");
                 while(wo.PlaybackState != PlaybackState.Stopped)
                 {
+                    Console.Write(".");
                     await Task.Delay(500);
                 }
+                Console.WriteLine("Finished");
             }
         }
 
