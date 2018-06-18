@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace SpanTest
 {
@@ -26,7 +27,7 @@ namespace SpanTest
         /// </summary>
         public override int Read(Span<float> buffer)
         {
-            var b = buffer.NonPortableCast<float,byte>();
+            var b = MemoryMarshal.Cast<float, byte>(buffer); //buffer.NonPortableCast<float,byte>();
             int bytesRead = source.Read(b);
             int samplesRead = bytesRead / 4;
             return samplesRead;

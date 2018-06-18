@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace SpanTest
 {
@@ -42,7 +43,8 @@ namespace SpanTest
             var s = new Span<float>(sourceBuffer, 0, samplesRequired);
             int sourceSamples = sourceProvider.Read(s);
 
-            var outBuf = destBuffer.NonPortableCast<byte,short>();
+            var outBuf = MemoryMarshal.Cast<byte, short>(destBuffer);
+                //destBuffer.NonPortableCast<byte,short>();
             for (int sample = 0; sample < sourceSamples; sample++)
             {
                 // adjust volume

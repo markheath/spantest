@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace SpanTest
 {
@@ -29,7 +30,7 @@ namespace SpanTest
         /// </summary>
         public int Read(Span<byte> buffer)
         {
-            var f = buffer.NonPortableCast<byte,float>();
+            var f = MemoryMarshal.Cast<byte, float>(buffer); // buffer.NonPortableCast<byte,float>();
             Debug.Assert(f.Length == buffer.Length / 4);
             int samplesRead = source.Read(f);
             return samplesRead * 4;

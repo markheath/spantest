@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace SpanTest
@@ -41,7 +42,7 @@ namespace SpanTest
             AssertEqual(arr[2], bytes[2]);
             AssertEqual(45, arr[2]);
 
-            var floats = bytes.NonPortableCast<byte,float>();
+            var floats = MemoryMarshal.Cast<byte, float>(bytes); //bytes.NonPortableCast<byte,float>();
             floats[0] = 1.0f;
             floats[1] = 2.0f;
             AssertEqual(42, slicedBytes[0]);

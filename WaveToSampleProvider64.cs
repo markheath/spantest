@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace SpanTest
 {
@@ -31,7 +32,7 @@ namespace SpanTest
             var b = new Span<byte>(sourceBuffer, 0, bytesNeeded);
             int bytesRead = source.Read(b);
             int samplesRead = bytesRead / 8;
-            var b64 = b.NonPortableCast<byte,double>();
+            var b64 = MemoryMarshal.Cast<byte, double>(b); // b.NonPortableCast<byte,double>();
             for (int n = 0; n < samplesRead; n ++)
             {
                 buffer[n] = (float)b64[n];
