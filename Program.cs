@@ -11,6 +11,10 @@ namespace SpanTest
             using(var wo = new WaveOutEvent())
             {
                 var sg = new SignalGenerator() { Gain = 0.2f};
+                sg.SweepLengthSecs = 5;
+                sg.Frequency = 200;
+                sg.FrequencyEnd = 2000;
+                sg.Type = SignalGeneratorType.Sweep;
                 await wo.InitAsync(sg.Take(TimeSpan.FromSeconds(5)));
                 wo.Play();
                 wo.PlaybackStopped += (s,e)=> Console.WriteLine($"Stopped {e.Exception}");
