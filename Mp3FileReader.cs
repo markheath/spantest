@@ -418,6 +418,7 @@ namespace SpanTest
                         {
                             // Purge the first frame's data
                             decompressBuffer.Slice(bytesPerDecodedFrame, bytesPerDecodedFrame).CopyTo(decompressBuffer);
+                            // question - why not just set decompressBufferOffset += bytesDecodedPerFrame here?
                             //Array.Copy(decompressBuffer, bytesPerDecodedFrame, decompressBuffer, 0, bytesPerDecodedFrame);
                             decompressed = bytesPerDecodedFrame;
                         }

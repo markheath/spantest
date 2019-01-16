@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -8,7 +10,8 @@ namespace SpanTest
     {
         static async Task Main(string[] args)
         {
-            using(var wo = new WaveOutEvent())
+            SpeedTest();
+            using (var wo = new WaveOutEvent())
             {
                 var sg = new SignalGenerator() { Gain = 0.2f};
                 sg.SweepLengthSecs = 5;
@@ -31,6 +34,24 @@ namespace SpanTest
                 Console.WriteLine("Finished");
             }
         }
+
+        static void SpeedTest()
+        {
+            var ms = new MemoryStream(File.ReadAllBytes("test.mp3"));
+            var sw = Stopwatch.StartNew();
+            var totalRead = 0;
+            using (var reader = new Mp3FileReader(ms))
+            {
+                var b = new Span<byte>(new byte[reader.WaveFormat.AverageBytesPerSecond / 10]);
+                var read = 0;
+                while ((read = reader.Read(b)) > 0)
+                {
+                    totalRead += read;
+                }
+            }
+            Console.WriteLine($"Decompressed {ms.Length} bytes of MP3 into {totalRead} bytes of audio in {sw.ElapsedMilliseconds}ms");
+        }
+
 
         void Test()
         {
