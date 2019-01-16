@@ -12,7 +12,6 @@ namespace SpanTest
         private readonly object waveOutLock;
         private IntPtr hWaveOut;
         private GCHandle hHeader; // we need to pin the header structure
-        private GCHandle hThis; // for the user callback
 
         /// <summary>
         /// creates a new wavebuffer
@@ -35,8 +34,6 @@ namespace SpanTest
             header.dataBuffer = bufferPtr;
             header.bufferLength = bufferSize;
             header.loops = 1;
-            hThis = GCHandle.Alloc(this);
-            header.userData = (IntPtr)hThis;
             lock (waveOutLock)
             {
                 MmException.Try(WaveInterop.waveOutPrepareHeader(hWaveOut, header, Marshal.SizeOf(header)), "waveOutPrepareHeader");
@@ -75,8 +72,6 @@ namespace SpanTest
             // free unmanaged resources
             if (hHeader.IsAllocated)
                 hHeader.Free();
-            if (hThis.IsAllocated)
-                hThis.Free();
             if (hWaveOut != IntPtr.Zero)
             {
                 lock (waveOutLock)
