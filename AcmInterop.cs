@@ -94,18 +94,8 @@ namespace SpanTest
         /// DWORD cbwfxDst,          
         /// DWORD fdwSuggest);
         /// </summary>
-        [DllImport("Msacm32.dll")]
-        public static extern MmResult acmFormatSuggest(
-            IntPtr hAcmDriver,
-            [In, MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "SpanTest.WaveFormatCustomMarshaler")]
-            WaveFormat sourceFormat,
-            [In, Out, MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "SpanTest.WaveFormatCustomMarshaler")]
-            WaveFormat destFormat,
-            int sizeDestFormat,
-            AcmFormatSuggestFlags suggestFlags);
-
         [DllImport("Msacm32.dll", EntryPoint = "acmFormatSuggest")]
-        public static extern MmResult acmFormatSuggest2(
+        public static extern MmResult acmFormatSuggest(
             IntPtr hAcmDriver,
             IntPtr sourceFormatPointer,
             IntPtr destFormatPointer,
@@ -131,26 +121,11 @@ namespace SpanTest
         ///   LPWAVEFILTER    pwfltr,     
         ///   DWORD_PTR       dwCallback, 
         ///   DWORD_PTR       dwInstance, 
-        ///   DWORD           fdwOpen     
-        /// </summary>
-        [DllImport("Msacm32.dll")]
-        public static extern MmResult acmStreamOpen(
-            out IntPtr hAcmStream,
-            IntPtr hAcmDriver,
-            [In, MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "SpanTest.WaveFormatCustomMarshaler")]
-            WaveFormat sourceFormat,
-            [In, MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "SpanTest.WaveFormatCustomMarshaler")]
-            WaveFormat destFormat,
-            [In] WaveFilter waveFilter,
-            IntPtr callback,
-            IntPtr instance,
-            AcmStreamOpenFlags openFlags);
-
-        /// <summary>
-        /// A version with pointers for troubleshooting
+        ///   DWORD           fdwOpen
+        /// This version with pointers to avoid the need for a custom marshaller
         /// </summary>
         [DllImport("Msacm32.dll", EntryPoint = "acmStreamOpen")]
-        public static extern MmResult acmStreamOpen2(
+        public static extern MmResult acmStreamOpen(
             out IntPtr hAcmStream,
             IntPtr hAcmDriver,
             IntPtr sourceFormatPointer,

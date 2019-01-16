@@ -1,48 +1,49 @@
 ﻿using System;
+using System.Buffers;
 using System.Runtime.InteropServices;
 
 namespace SpanTest
 {
     class AcmStreamHeader : IDisposable
     {
-        private AcmStreamHeaderStruct streamHeader;
-        private byte[] sourceBuffer;
-        private GCHandle hSourceBuffer;
-        private byte[] destBuffer;
-        private GCHandle hDestBuffer;
-        private IntPtr streamHandle;
+        private readonly AcmStreamHeaderStruct streamHeader;
+        private Memory<byte> sourceBuffer;
+        private readonly MemoryHandle hSourceBuffer;
+        private Memory<byte> destBuffer;
+        private readonly MemoryHandle hDestBuffer;
+        private readonly IntPtr streamHandle;
         private bool firstTime;
 
         public AcmStreamHeader(IntPtr streamHandle, int sourceBufferLength, int destBufferLength)
         {
             streamHeader = new AcmStreamHeaderStruct();
-            sourceBuffer = new byte[sourceBufferLength];
-            hSourceBuffer = GCHandle.Alloc(sourceBuffer, GCHandleType.Pinned);
+            sourceBuffer = new Memory<byte>(new byte[sourceBufferLength]);
+            hSourceBuffer = sourceBuffer.Pin();
 
-            destBuffer = new byte[destBufferLength];
-            hDestBuffer = GCHandle.Alloc(destBuffer, GCHandleType.Pinned);
+            destBuffer = new Memory<byte>(new byte[destBufferLength]);
+            hDestBuffer = destBuffer.Pin();
 
             this.streamHandle = streamHandle;
             firstTime = true;
             //Prepare();
         }
 
-        private void Prepare()
+        private unsafe void Prepare()
         {
             streamHeader.cbStruct = Marshal.SizeOf(streamHeader);
             streamHeader.sourceBufferLength = sourceBuffer.Length;
-            streamHeader.sourceBufferPointer = hSourceBuffer.AddrOfPinnedObject();
+            streamHeader.sourceBufferPointer = (IntPtr)hSourceBuffer.Pointer;
             streamHeader.destBufferLength = destBuffer.Length;
-            streamHeader.destBufferPointer = hDestBuffer.AddrOfPinnedObject();
+            streamHeader.destBufferPointer = (IntPtr)hDestBuffer.Pointer;
             MmException.Try(AcmInterop.acmStreamPrepareHeader(streamHandle, streamHeader, 0), "acmStreamPrepareHeader");
         }
 
-        private void Unprepare()
+        private unsafe void Unprepare()
         {
             streamHeader.sourceBufferLength = sourceBuffer.Length;
-            streamHeader.sourceBufferPointer = hSourceBuffer.AddrOfPinnedObject();
+            streamHeader.sourceBufferPointer = (IntPtr)hSourceBuffer.Pointer;
             streamHeader.destBufferLength = destBuffer.Length;
-            streamHeader.destBufferPointer = hDestBuffer.AddrOfPinnedObject();
+            streamHeader.destBufferPointer = (IntPtr)hDestBuffer.Pointer;
 
             MmResult result = AcmInterop.acmStreamUnprepareHeader(streamHandle, streamHeader, 0);
             if (result != MmResult.NoError)
@@ -78,21 +79,9 @@ namespace SpanTest
             return streamHeader.destBufferLengthUsed;
         }
 
-        public byte[] SourceBuffer
-        {
-            get
-            {
-                return sourceBuffer;
-            }
-        }
+        public Memory<byte> SourceBuffer => sourceBuffer;
 
-        public byte[] DestBuffer
-        {
-            get
-            {
-                return destBuffer;
-            }
-        }
+        public Memory<byte> DestBuffer => destBuffer;
 
         #region IDisposable Members
 
@@ -111,8 +100,8 @@ namespace SpanTest
                 //Unprepare();
                 sourceBuffer = null;
                 destBuffer = null;
-                hSourceBuffer.Free();
-                hDestBuffer.Free();
+                hSourceBuffer.Dispose();
+                hDestBuffer.Dispose();
             }
             disposed = true;
         }

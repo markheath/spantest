@@ -28,7 +28,20 @@ namespace SpanTest
                 this.sourceFormat = sourceFormat;
                 int sourceBufferSize = Math.Max(65536, sourceFormat.AverageBytesPerSecond);
                 sourceBufferSize -= (sourceBufferSize % sourceFormat.BlockAlign);
-                MmException.Try(AcmInterop.acmStreamOpen(out streamHandle, IntPtr.Zero, sourceFormat, destFormat, null, IntPtr.Zero, IntPtr.Zero, AcmStreamOpenFlags.NonRealTime), "acmStreamOpen");
+
+
+                IntPtr sourceFormatPointer = WaveFormat.MarshalToPtr(sourceFormat);
+                IntPtr destFormatPointer = WaveFormat.MarshalToPtr(destFormat);
+                try
+                {
+                    MmException.Try(AcmInterop.acmStreamOpen(out streamHandle, driverHandle,
+                        sourceFormatPointer, destFormatPointer, null, IntPtr.Zero, IntPtr.Zero, AcmStreamOpenFlags.None), "acmStreamOpen");
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(sourceFormatPointer);
+                    Marshal.FreeHGlobal(destFormatPointer);
+                }
 
                 int destBufferSize = SourceToDest(sourceBufferSize);
                 streamHeader = new AcmStreamHeader(streamHandle, sourceBufferSize, destBufferSize);
@@ -55,8 +68,20 @@ namespace SpanTest
             this.sourceFormat = sourceFormat;
             sourceBufferSize -= (sourceBufferSize % sourceFormat.BlockAlign);
             MmException.Try(AcmInterop.acmDriverOpen(out driverHandle, driverId, 0), "acmDriverOpen");
-            MmException.Try(AcmInterop.acmStreamOpen(out streamHandle, driverHandle,
-                          sourceFormat, sourceFormat, waveFilter, IntPtr.Zero, IntPtr.Zero, AcmStreamOpenFlags.NonRealTime), "acmStreamOpen");
+
+            IntPtr sourceFormatPointer = WaveFormat.MarshalToPtr(sourceFormat);
+            try
+            {
+                MmException.Try(AcmInterop.acmStreamOpen(out streamHandle, driverHandle,
+                    sourceFormatPointer, sourceFormatPointer, waveFilter, IntPtr.Zero, IntPtr.Zero, AcmStreamOpenFlags.None), "acmStreamOpen");
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(sourceFormatPointer);
+            }
+
+            //MmException.Try(AcmInterop.acmStreamOpen(out streamHandle, driverHandle,
+            //              sourceFormat, sourceFormat, waveFilter, IntPtr.Zero, IntPtr.Zero, AcmStreamOpenFlags.NonRealTime), "acmStreamOpen");
             streamHeader = new AcmStreamHeader(streamHandle, sourceBufferSize, SourceToDest(sourceBufferSize));
         }
 
@@ -100,16 +125,21 @@ namespace SpanTest
         {
             // create a PCM format
             WaveFormat suggestedFormat = new WaveFormat(compressedFormat.SampleRate, 16, compressedFormat.Channels);
-            MmException.Try(AcmInterop.acmFormatSuggest(IntPtr.Zero, compressedFormat, suggestedFormat, Marshal.SizeOf(suggestedFormat), AcmFormatSuggestFlags.FormatTag), "acmFormatSuggest");
+            //MmException.Try(AcmInterop.acmFormatSuggest(IntPtr.Zero, compressedFormat, suggestedFormat, Marshal.SizeOf(suggestedFormat), AcmFormatSuggestFlags.FormatTag), "acmFormatSuggest");
 
-            /*IntPtr suggestedFormatPointer = WaveFormat.MarshalToPtr(suggestedFormat);
+            IntPtr suggestedFormatPointer = WaveFormat.MarshalToPtr(suggestedFormat);
             IntPtr compressedFormatPointer = WaveFormat.MarshalToPtr(compressedFormat);
-            MmResult result = AcmInterop.acmFormatSuggest2(IntPtr.Zero, compressedFormatPointer, suggestedFormatPointer, Marshal.SizeOf(suggestedFormat), AcmFormatSuggestFlags.FormatTag);
-            suggestedFormat = WaveFormat.MarshalFromPtr(suggestedFormatPointer);
-            Marshal.FreeHGlobal(suggestedFormatPointer);
-            Marshal.FreeHGlobal(compressedFormatPointer);
-            MmException.Try(result, "acmFormatSuggest");*/
-
+            try
+            {
+                MmResult result = AcmInterop.acmFormatSuggest(IntPtr.Zero, compressedFormatPointer, suggestedFormatPointer, Marshal.SizeOf(suggestedFormat), AcmFormatSuggestFlags.FormatTag);
+                suggestedFormat = WaveFormat.MarshalFromPtr(suggestedFormatPointer);
+                MmException.Try(result, "acmFormatSuggest");
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(suggestedFormatPointer);
+                Marshal.FreeHGlobal(compressedFormatPointer);
+            }
 
             return suggestedFormat;
         }
@@ -117,13 +147,13 @@ namespace SpanTest
         /// <summary>
         /// Returns the Source Buffer. Fill this with data prior to calling convert
         /// </summary>
-        public byte[] SourceBuffer => streamHeader.SourceBuffer;
+        public Memory<byte> SourceBuffer => streamHeader.SourceBuffer;
 
         /// <summary>
         /// Returns the Destination buffer. This will contain the converted data
         /// after a successful call to Convert
         /// </summary>
-        public byte[] DestBuffer => streamHeader.DestBuffer;
+        public Memory<byte> DestBuffer => streamHeader.DestBuffer;
 
         /// <summary>
         /// Report that we have repositioned in the source stream

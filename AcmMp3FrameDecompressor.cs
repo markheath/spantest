@@ -34,7 +34,7 @@ namespace SpanTest
         /// <summary>
         /// Output format (PCM)
         /// </summary>
-        public WaveFormat OutputFormat { get { return pcmFormat; } }
+        public WaveFormat OutputFormat => pcmFormat;
 
         /// <summary>
         /// Decompresses a frame
@@ -47,18 +47,19 @@ namespace SpanTest
         {
             if (frame == null)
             {
-                throw new ArgumentNullException("frame", "You must provide a non-null Mp3Frame to decompress");
+                throw new ArgumentNullException(nameof(frame), "You must provide a non-null Mp3Frame to decompress");
             }
-            Array.Copy(frame.RawData, conversionStream.SourceBuffer, frame.FrameLength);
-            int sourceBytesConverted = 0;
-            int converted = conversionStream.Convert(frame.FrameLength, out sourceBytesConverted);
+
+            var c = new Span<byte>(frame.RawData,0,frame.FrameLength);
+            c.CopyTo(conversionStream.SourceBuffer.Span);
+            //Array.Copy(frame.RawData, conversionStream.SourceBuffer, frame.FrameLength);
+            int converted = conversionStream.Convert(frame.FrameLength, out var sourceBytesConverted);
             if (sourceBytesConverted != frame.FrameLength)
             {
-                throw new InvalidOperationException(String.Format("Couldn't convert the whole MP3 frame (converted {0}/{1})",
-                    sourceBytesConverted, frame.FrameLength));
+                throw new InvalidOperationException(
+                    $"Couldn't convert the whole MP3 frame (converted {sourceBytesConverted}/{frame.FrameLength})");
             }
-            var c = new Span<byte>(conversionStream.DestBuffer);
-            c.Slice(0, converted).CopyTo(dest);
+            conversionStream.DestBuffer.Span.Slice(0, converted).CopyTo(dest);
             //Array.Copy(conversionStream.DestBuffer, 0, dest, destOffset, converted);
             return converted;
         }
@@ -79,8 +80,7 @@ namespace SpanTest
             if (!disposed)
             {
                 disposed = true;
-                if (conversionStream != null)
-                    conversionStream.Dispose();
+                conversionStream?.Dispose();
                 GC.SuppressFinalize(this);
             }
         }

@@ -160,10 +160,9 @@ namespace SpanTest
                     // corrupt data
                     waveFormat.extraSize = 0;
                     break;
-                /* 
                 case WaveFormatEncoding.Extensible:
                     waveFormat = Marshal.PtrToStructure<WaveFormatExtensible>(pointer);
-                    break;
+                    break; /*
                 case WaveFormatEncoding.Adpcm:
                     waveFormat = Marshal.PtrToStructure<AdpcmWaveFormat>(pointer);
                     break;
